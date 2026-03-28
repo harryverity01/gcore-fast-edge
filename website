@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Markdown for Agents — The Web Is Being Rebuilt for AI</title>
+<meta name="description" content="Why the web needs a parallel layer for AI agents. HTML costs 5x more tokens than Markdown. Here's what to do about it.">
+<meta property="og:title" content="Markdown for Agents — The Web Is Being Rebuilt for AI">
+<meta property="og:description" content="AI bot traffic will exceed human web traffic by 2027. The web needs a new layer.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Newsreader:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0c;
+    --bg-elevated: #111114;
+    --bg-card: #16161a;
+    --text: #e8e6e3;
+    --text-dim: #8a8a8f;
+    --text-faint: #55555a;
+    --accent: #ff6b35;
+    --accent-glow: rgba(255, 107, 53, 0.15);
+    --accent-secondary: #00d4aa;
+    --accent-secondary-glow: rgba(0, 212, 170, 0.1);
+    --border: #2a2a2f;
+    --code-bg: #1a1a1f;
+    --mono: 'IBM Plex Mono', monospace;
+    --serif: 'Newsreader', Georgia, serif;
+    --max-w: 720px;
+    --max-w-wide: 960px;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--serif);
+    font-size: 19px;
+    line-height: 1.72;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  /* ─── NOISE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -100px;
+    left: -100px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, var(--accent-secondary-glow) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-inner {
+    max-width: var(--max-w-wide);
+    margin: 0 auto;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.2s;
+  }
+
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.8rem, 7vw, 5.5rem);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    max-width: 14ch;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.4s;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-top: 40px;
+    max-width: 50ch;
+    line-height: 1.7;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.6s;
+  }
+
+  .hero-tokens {
+    display: flex;
+    gap: 32px;
+    margin-top: 56px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.8s;
+  }
+
+  .token-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 24px 32px;
+    border-radius: 4px;
+    position: relative;
+  }
+
+  .token-box.html-box { border-left: 3px solid #ff4444; }
+  .token-box.md-box { border-left: 3px solid var(--accent-secondary); }
+
+  .token-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 4px;
+  }
+
+  .token-num {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 700;
+  }
+
+  .token-box.html-box .token-num { color: #ff4444; }
+  .token-box.md-box .token-num { color: var(--accent-secondary); }
+
+  .token-unit {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .scroll-cue {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 1.2s;
+  }
+
+  .scroll-cue::after {
+    content: '';
+    display: block;
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--text-faint), transparent);
+    margin: 12px auto 0;
+    animation: pulse 2s ease infinite;
+  }
+
+  /* ─── ARTICLE BODY ─── */
+  .article {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding: 0 24px 120px;
+  }
+
+  .article section {
+    margin-bottom: 80px;
+  }
+
+  .section-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .article h2 {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 32px;
+  }
+
+  .article p {
+    margin-bottom: 24px;
+    color: var(--text);
+  }
+
+  .article p.dim {
+    color: var(--text-dim);
+  }
+
+  /* ─── PULL QUOTES ─── */
+  .pull-quote {
+    border-left: 3px solid var(--accent);
+    padding: 24px 0 24px 32px;
+    margin: 48px 0;
+    font-size: 22px;
+    font-style: italic;
+    line-height: 1.55;
+    color: var(--text);
+    position: relative;
+  }
+
+  .pull-quote cite {
+    display: block;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-style: normal;
+    color: var(--text-faint);
+    margin-top: 16px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ─── STAT CALLOUTS ─── */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+    margin: 48px 0;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 28px 24px;
+    border-radius: 4px;
+    text-align: center;
+  }
+
+  .stat-card .stat-value {
+    font-family: var(--mono);
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stat-card .stat-desc {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 10px;
+    letter-spacing: 0.05em;
+    line-height: 1.5;
+    text-transform: uppercase;
+  }
+
+  /* ─── CODE BLOCKS ─── */
+  .code-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    margin: 48px 0;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .code-pane {
+    background: var(--code-bg);
+    padding: 24px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+
+  .code-pane-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .code-pane code {
+    color: var(--text-dim);
+    white-space: pre;
+    display: block;
+  }
+
+  .code-pane .tag { color: #ff6b6b; }
+  .code-pane .attr { color: #ffd43b; }
+  .code-pane .str { color: #69db7c; }
+  .code-pane .md-h { color: var(--accent-secondary); font-weight: 600; }
+  .code-pane .md-text { color: var(--text); }
+
+  /* ─── TIMELINE ─── */
+  .timeline {
+    position: relative;
+    margin: 48px 0;
+    padding-left: 32px;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--accent), var(--border), var(--accent-secondary));
+  }
+
+  .timeline-item {
+    margin-bottom: 32px;
+    position: relative;
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -36px;
+    top: 8px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+  }
+
+  .timeline-year {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .timeline-desc {
+    font-size: 16px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  /* ─── TWO FUTURES ─── */
+  .futures-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin: 48px 0;
+  }
+
+  .future-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 32px 28px;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .future-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+  }
+
+  .future-card.clumsy::before { background: #ff4444; }
+  .future-card.lean::before { background: var(--accent-secondary); }
+
+  .future-card h3 {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .future-card.clumsy h3 { color: #ff4444; }
+  .future-card.lean h3 { color: var(--accent-secondary); }
+
+  .future-card p {
+    font-size: 16px;
+    color: var(--text-dim);
+    line-height: 1.65;
+    margin-bottom: 0;
+  }
+
+  /* ─── DIVIDER ─── */
+  .divider {
+    width: 60px;
+    height: 1px;
+    background: var(--border);
+    margin: 80px auto;
+  }
+
+  /* ─── GOOGLE SECTION ─── */
+  .google-quote {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 32px;
+    margin: 48px 0;
+    position: relative;
+  }
+
+  .google-quote::before {
+    content: '"';
+    font-family: var(--serif);
+    font-size: 80px;
+    color: var(--accent);
+    opacity: 0.2;
+    position: absolute;
+    top: -10px;
+    left: 20px;
+    line-height: 1;
+  }
+
+  .google-quote blockquote {
+    font-style: italic;
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--text);
+    position: relative;
+    z-index: 1;
+  }
+
+  .google-quote .gq-author {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-faint);
+    margin-top: 16px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ─── THREE POINTS LIST ─── */
+  .points-list {
+    list-style: none;
+    margin: 32px 0;
+    counter-reset: pt;
+  }
+
+  .points-list li {
+    counter-increment: pt;
+    padding: 20px 0 20px 48px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--text-dim);
+  }
+
+  .points-list li::before {
+    content: counter(pt);
+    position: absolute;
+    left: 0;
+    top: 20px;
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+  }
+
+  /* ─── NEGOTIATION DIAGRAM ─── */
+  .neg-diagram {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 40px 32px;
+    margin: 48px 0;
+    text-align: center;
+  }
+
+  .neg-diagram .neg-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 32px;
+  }
+
+  .neg-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .neg-node {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .neg-arrow {
+    font-family: var(--mono);
+    font-size: 18px;
+    color: var(--text-faint);
+  }
+
+  .neg-node.highlight {
+    border-color: var(--accent-secondary);
+    color: var(--accent-secondary);
+  }
+
+  /* ─── CTA ─── */
+  .cta-section {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 56px 40px;
+    margin: 80px 0 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+  }
+
+  .cta-section h2 {
+    font-size: 28px;
+    margin-bottom: 16px;
+  }
+
+  .cta-section p {
+    color: var(--text-dim);
+    font-size: 17px;
+    max-width: 50ch;
+    margin: 0 auto 32px;
+  }
+
+  .cta-btn {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 16px 40px;
+    background: var(--accent);
+    color: var(--bg);
+    text-decoration: none;
+    border-radius: 4px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255, 107, 53, 0.3);
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    text-align: center;
+    padding: 60px 24px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-faint);
+    letter-spacing: 0.05em;
+  }
+
+  footer a {
+    color: var(--text-dim);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+    transition: color 0.2s;
+  }
+
+  footer a:hover { color: var(--accent); }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 700px) {
+    body { font-size: 17px; }
+
+    .hero-tokens { flex-direction: column; gap: 16px; }
+
+    .code-compare { grid-template-columns: 1fr; }
+
+    .futures-grid { grid-template-columns: 1fr; }
+
+    .stat-row { grid-template-columns: 1fr 1fr; }
+
+    .neg-flow { flex-direction: column; }
+
+    .pull-quote { padding-left: 20px; font-size: 19px; }
+
+    .cta-section { padding: 40px 24px; }
+  }
+
+  @media (max-width: 440px) {
+    .stat-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ HERO ═══════════ -->
+<header class="hero">
+  <div class="hero-inner">
+    <span class="hero-label">Gcore FastEdge</span>
+    <h1>The Web Is Being Rebuilt for <em>AI</em></h1>
+    <p class="hero-sub">Same two words. Five times the price. Every time an AI agent visits your website — eight billion times a month — it's paying the full HTML tax. Here's how to stop it.</p>
+
+    <div class="hero-tokens">
+      <div class="token-box html-box">
+        <div class="token-label">HTML</div>
+        <span class="token-num">16,180</span>
+        <div class="token-unit">tokens</div>
+      </div>
+      <div class="token-box md-box">
+        <div class="token-label">Markdown</div>
+        <span class="token-num">3,150</span>
+        <div class="token-unit">tokens</div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-cue">Scroll</div>
+</header>
+
+<!-- ═══════════ ARTICLE ═══════════ -->
+<main class="article">
+
+  <!-- ACT 1 — The problem -->
+  <section class="reveal">
+    <span class="section-num">01 — The Problem</span>
+    <h2>Two words. Fifteen tokens.</h2>
+
+    <div class="code-compare">
+      <div class="code-pane">
+        <span class="code-pane-label">Markdown — 3 tokens</span>
+        <code><span class="md-h">## About Us</span></code>
+      </div>
+      <div class="code-pane">
+        <span class="code-pane-label">HTML — 15 tokens</span>
+        <code><span class="tag">&lt;h2</span> <span class="attr">class=</span><span class="str">"section-title"</span> <span class="attr">id=</span><span class="str">"about"</span><span class="tag">&gt;</span>
+  <span class="md-text">About Us</span>
+<span class="tag">&lt;/h2&gt;</span></code>
+      </div>
+    </div>
+
+    <p>Same content. Five times the cost. And every single time an AI agent visits your website — happening around eight billion times a month — it's paying fifteen tokens for two words.</p>
+    <p>Gcore has launched a feature that lets any website on their network serve a completely different version of itself to AI systems. The same content, stripped down to its skeleton.</p>
+    <p>This is <strong>Markdown for Agents.</strong></p>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ACT 2 — History -->
+  <section class="reveal">
+    <span class="section-num">02 — The History Nobody Asked For</span>
+    <h2>From physics papers to cookie banners</h2>
+
+    <p>In 1991, Tim Berners-Lee invented HTML for one simple reason: he wanted physicists at CERN to click between documents. Headings. Paragraphs. Links. Done.</p>
+    <p>For about five years, that was all the web was. Black text on a grey background.</p>
+    <p class="dim">Then we wanted it to look nice. So we added CSS. Then we wanted it to do things. JavaScript. Then we wanted it to sell things. Tracking pixels, analytics scripts, ad injection frameworks, consent management platforms, A/B testing libraries, chat widgets, notification pop-ups, and — God help us — auto-playing video.</p>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-year">1991</div>
+        <div class="timeline-desc">HTML invented at CERN. Hyperlinks between text files. That's it.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">1996</div>
+        <div class="timeline-desc">CSS arrives. The web gets pretty.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">1997</div>
+        <div class="timeline-desc">JavaScript gains traction. The web gets interactive.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2010s</div>
+        <div class="timeline-desc">Tracking pixels, analytics, ad frameworks, cookie banners. The web gets heavy.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2026</div>
+        <div class="timeline-desc">Average webpage: 2.5 MB. AI agents now processing it all — just for the text.</div>
+      </div>
+    </div>
+
+    <p>A technology designed to link physics papers now takes 2.5 megabytes to load a single page. None of this was a problem when the only things reading websites were humans with browsers and mice.</p>
+    <p>But something has changed.</p>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ACT 3 — The machines -->
+  <section class="reveal">
+    <span class="section-num">03 — The Machines Start Reading</span>
+    <h2>AI bot traffic will exceed human web traffic by 2027</h2>
+
+    <p>In March 2026, Cloudflare CEO Matthew Prince stated at SXSW that AI bot traffic is on track to surpass human web traffic within a year. This isn't speculation — Cloudflare processes requests for 20% of all websites on earth. They can see it happening.</p>
+
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-value">51%</div>
+        <div class="stat-desc">of web traffic is already automated</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">7.9B</div>
+        <div class="stat-desc">AI agent requests in Jan–Feb 2026</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">80%</div>
+        <div class="stat-desc">of tokens wasted on packaging, not content</div>
+      </div>
+    </div>
+
+    <p>Every one of those requests is reading your website the hard way. When an AI agent opens a page, it doesn't care about the buttons or the layout. It needs the text. Yet it has to swallow every div wrapper, every script tag, every tracking pixel — just to reach the words.</p>
+
+    <div class="pull-quote">
+      Four out of every five tokens an AI agent processes on a typical webpage are packaging, not content.
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ACT 4 — Two Futures -->
+  <section class="reveal">
+    <span class="section-num">04 — Two Futures</span>
+    <h2>The web is at a crossroads</h2>
+
+    <p>The web is built for human browsers. But increasingly, the things reading it aren't human. Two very different paths forward:</p>
+
+    <div class="futures-grid">
+      <div class="future-card clumsy">
+        <h3>The Clumsy Robot</h3>
+        <p>AI agents controlling a mouse and keyboard. Clicking menus. Scrolling. Dismissing cookie banners. It works the way a toddler driving a car works — technically the vehicle is moving forward. Burning enormous compute to extract simple text.</p>
+      </div>
+      <div class="future-card lean">
+        <h3>The Lean Machine</h3>
+        <p>A parallel layer. Same content, different format. The AI agent requests Markdown via a standard HTTP header. The server responds with clean, structured text. Same URL. Same content. 80% fewer tokens.</p>
+      </div>
+    </div>
+
+    <p>Content negotiation isn't new technology. It's the same mechanism that lets your browser request a JPEG instead of a PNG, or JSON instead of XML. The same URL, the same content — just a different representation. And the efficiency gains are not marginal.</p>
+
+    <div class="neg-diagram">
+      <div class="neg-title">Content Negotiation</div>
+      <div class="neg-flow">
+        <div class="neg-node">AI Agent</div>
+        <div class="neg-arrow">→</div>
+        <div class="neg-node highlight">Accept: text/markdown</div>
+        <div class="neg-arrow">→</div>
+        <div class="neg-node">Edge Server</div>
+        <div class="neg-arrow">→</div>
+        <div class="neg-node highlight">Clean Markdown</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ACT 5 — Google -->
+  <section class="reveal">
+    <span class="section-num">05 — Google Says It's Stupid</span>
+    <h2>The cloaking question</h2>
+
+    <div class="google-quote">
+      <blockquote>"Converting pages to markdown is such a stupid idea. Did you know LLMs can read images? WHY NOT TURN YOUR WHOLE SITE INTO AN IMAGE?"</blockquote>
+      <div class="gq-author">— John Mueller, Google Search Advocate, on Bluesky</div>
+    </div>
+
+    <p>Mueller's argument comes down to three points:</p>
+
+    <ol class="points-list">
+      <li>LLMs have been trained on HTML since the beginning. They can parse it fine — possibly better than Markdown.</li>
+      <li>Creating a separate version for bots is cloaking: showing different content to machines than to humans, which Google has banned for over a decade.</li>
+      <li>Search engines would need to crawl both versions to verify they match, doubling the load and negating efficiency gains.</li>
+    </ol>
+
+    <p>And here's the thing — Mueller is right, up to a point. The Reddit developer he was responding to described user-agent sniffing: detecting bots and serving them a different page. That <em>is</em> cloaking.</p>
+    <p>But Mueller never addressed the 80% token reduction. He never addressed the compute waste or the energy cost of processing five times more data than necessary across billions of requests. And he conflated two very different technical approaches.</p>
+
+    <div class="pull-quote">
+      Content negotiation isn't cloaking any more than a website serving JSON to an API client and HTML to a browser is cloaking. It's how the web was designed to work.
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ACT 6 — Infrastructure -->
+  <section class="reveal">
+    <span class="section-num">06 — The Infrastructure Play</span>
+    <h2>Think of your website like a restaurant</h2>
+
+    <p>You still need a beautiful dining room for human customers. But you also need a streamlined, efficient pipeline for the delivery riders who just need the food.</p>
+    <p>Gcore's FastEdge runs WebAssembly on over 210 edge nodes worldwide. You deploy lightweight conversion logic — HTML to Markdown, content negotiation, token-aware responses — directly on the infrastructure closest to where the request originates. Average global latency of 30 milliseconds.</p>
+    <p>A small Wasm application intercepts incoming requests, checks the Accept header, and — if the client is asking for Markdown — strips the HTML down to clean, structured text before it reaches the agent. No separate pages. No shadow sites. No cloaking.</p>
+
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-value">210+</div>
+        <div class="stat-desc">Edge nodes worldwide</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">30ms</div>
+        <div class="stat-desc">Average global latency</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">80%</div>
+        <div class="stat-desc">Token reduction per page</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ACT 7 — The close -->
+  <section class="reveal">
+    <span class="section-num">07 — The Close</span>
+    <h2>The dining room stays open</h2>
+
+    <p>The web was built for humans. It will continue to serve humans beautifully. Nobody is suggesting you replace your website with a Markdown file.</p>
+    <p>But the delivery window is about to become the busiest part of the restaurant. And right now, most websites are forcing every delivery rider to sit down, order from the full menu, wait for the appetiser, compliment the wine selection, and then finally take the food.</p>
+
+    <div class="pull-quote">
+      The question isn't whether this happens. It's whether your infrastructure is ready when it does.
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="cta-section reveal">
+    <h2>Set this up for your site</h2>
+    <p>We've published a step-by-step guide to deploying Markdown for Agents using Gcore FastEdge.</p>
+    <a href="https://gcore.com/docs" class="cta-btn" target="_blank" rel="noopener">Read the Guide</a>
+  </div>
+
+</main>
+
+<footer>
+  <p>A <a href="https://gcore.com" target="_blank" rel="noopener">Gcore</a> production &middot; Written & presented by Harry Verity</p>
+</footer>
+
+<script>
+// Intersection Observer for scroll reveals
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Hide scroll cue on scroll
+const scrollCue = document.querySelector('.scroll-cue');
+let cueHidden = false;
+window.addEventListener('scroll', () => {
+  if (!cueHidden && window.scrollY > 100) {
+    scrollCue.style.opacity = '0';
+    scrollCue.style.transition = 'opacity 0.4s ease';
+    cueHidden = true;
+  }
+}, { passive: true });
+</script>
+
+</body>
+</html>
